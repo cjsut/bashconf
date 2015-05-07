@@ -1,0 +1,5 @@
+# -*- shell-script -*-
+
+if test -z "${TZ}"; then
+    export TZ='PST8PDT'
+fi

@@ -1,0 +1,7 @@
+# -*- shell-script -*-
+# Enable some helper scripts.
+
+bashconf-enable-helper rxvt
+if [ -d "/proc/acpi/ibm" ]; then
+    bashconf-enable-helper ibm-acpi
+fi

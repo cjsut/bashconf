@@ -1,0 +1,6 @@
+# -*- shell-script -*-
+
+source "${BASHCONF_LIBRARY_DIR}/daemons/ssh-agent"
+ssh-agent-start
+ssh-agent-cleanup
+

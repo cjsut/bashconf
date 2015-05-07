@@ -1,0 +1,7 @@
+# -*- shell-script -*-
+
+# Huh, where'd this come from?  I'm guessing it was part of my default
+# system-supplied .bashrc, way back when I first installed Linux.  Not sure why
+# it's here, but it doesn't look malicious.
+
+SHELL="$BASH"

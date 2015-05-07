@@ -1,0 +1,39 @@
+# -*- shell-script -*-
+
+# Location to look for the top-level directory from the Rust nightly tarball.
+RUST_DIR=~/misc/apps/rust
+
+if test -d "${RUST_DIR}" -o -h "${RUST_DIR}"; then
+    # Packages (subdirs) in $RUST_DIR in which to search for binaries
+    # and libraries.
+    RUST_PACKAGES=(rustc cargo)
+
+    # Determine available library and bin directories.
+    RUST_LIB_DIRS=()
+    RUST_BIN_DIRS=()
+
+    for RUST_PACKAGE in "${RUST_PACKAGES[@]}"; do
+        RUST_PACKAGE_BIN_DIR="${RUST_DIR}/${RUST_PACKAGE}/bin"
+        RUST_PACKAGE_LIB_DIR="${RUST_DIR}/${RUST_PACKAGE}/lib"
+
+        test -d "${RUST_PACKAGE_BIN_DIR}" &&
+            RUST_BIN_DIRS[${#RUST_BIN_DIRS[@]}]="${RUST_PACKAGE_BIN_DIR}"
+        test -d "${RUST_PACKAGE_LIB_DIR}" &&
+            RUST_LIB_DIRS[${#RUST_LIB_DIRS[@]}]="${RUST_PACKAGE_LIB_DIR}"
+    done
+
+    if test "${#RUST_BIN_DIRS[@]}" -gt 0; then 
+        # Add Rust bin directories to PATH.
+        bashconf-add-paths "${RUST_BIN_DIRS[@]}"
+
+        # Alias all Rust binaries to use the correct LD_LIBRARY_PATH.
+        RUST_LD_LIBRARY_PATH="$(bashconf-join-array RUST_LIB_DIRS ':')"
+        for RUST_BINARY in $(find "${RUST_BIN_DIRS[@]}" -type f -executable); do
+            RUST_BINARY=$(basename ${RUST_BINARY})
+            eval "alias ${RUST_BINARY}='LD_LIBRARY_PATH="${RUST_LD_LIBRARY_PATH}" ${RUST_BINARY}'"
+        done
+    fi
+fi
+
+# Remove all functions/variables from this script.
+bashconf-cleanup rust

@@ -1,0 +1,4 @@
+# -*- shell-script -*-
+
+bashconf-add-paths \
+    ~/.rbenv/bin

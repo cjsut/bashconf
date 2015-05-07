@@ -1,0 +1,106 @@
+#!/bin/sh
+
+# Dependencies: sed, grep
+
+# Directly accesses the files in /proc/acpi/ibm/, so we don't get any
+# of that complaining about RandR versions and whatever else.
+
+IBM_DIR='/proc/acpi/ibm'
+
+# Grab a value from one of the procfiles.
+#
+# Usage: ibm-value-get FILE VALUENAME
+ibm-value-get()
+{
+    if [ -n "${2}" ] ; then
+	# A contains full copy of the file in question
+	local A="$(<${IBM_DIR}/${1})"
+
+	# B ought to be A with everything before the desired value stripped
+	local B="${A/*${2}:+([	])/}"
+
+	# C ought to be B with everything after the desired value stripped
+	local C="${B/
+*/}"
+	builtin echo "${C}"
+	# "/^${2}/!D;s/^[^:]\+\W\+\(.*\)/\1/g" "${IBM_DIR}/${1}"
+    else
+	cat "${IBM_DIR}/${1}"
+    fi
+}
+
+
+# Usage: ibm-value-set FILE VALUENAME VALUE
+ibm-value-set()
+{
+    local CV NV A B
+    A=( "${@}" )
+    B="${A[${#} - 1]}"
+
+
+    if echo "${B}" | grep -qE '(\+|\-)' ; then
+	CV=$(ibm-value-get ${1} ${2})
+	NV=$(( $CV + ( ${B} ) ))
+    else
+	NV=${B}
+    fi
+
+    echo ${2} ${NV} > "${IBM_DIR}/${1}"
+}
+
+ibm-value()
+{
+local HELP=\
+"Usage: ${FUNCNAME} ITEM [ATTRIBUTE [VALUE]]
+
+Call ibm-value-get, or ibm-value-set if VALUE is specified.  See also
+\`ibm-list-values'."
+
+    case "$#" in
+	0 ) builtin echo -e "$HELP"; return 1;; # Not enough args
+	1 | 2 )
+	    case "$1" in
+		-h | --help )
+		    builtin echo -e "$HELP"
+		    return 0
+		    ;;
+	    esac
+	    ibm-value-get "${@}"
+	    return $?
+	    ;;
+    esac
+
+    ibm-value-set "${@}"
+    return $?
+}
+
+ibm-list-values()
+{
+    local HELP=\
+"Usage: ${FUNCNAME} [ITEM]
+
+List the available items.  If an item name is given, list the
+attributes it has, separated by line feeds."
+
+    if [ "$#" -gt 0 ] ; then
+	case "$1" in
+	    -h | --help )
+		builtin echo -e "$HELP"
+		return 0
+		;;
+	esac
+	# List the values within a certain file
+	sed -e 's/:.*//g' < "${IBM_DIR}/${1}" | uniq
+    else
+	# List all available files
+	ls "${IBM_DIR}"
+    fi
+}
+
+ibm-completion()
+{
+    export COMPREPLY=( $(ibm-list-values) )
+}
+
+# alias ibm-fan-level='ibm-value fan level'
+# alias ibm-fan-level='ibm-value fan level'

@@ -1,0 +1,4 @@
+# -*- shell-script -*-
+
+## Set my editor.
+export EDITOR="emacs -nw -Q"

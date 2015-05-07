@@ -1,0 +1,7 @@
+# -*- shell-script -*-
+
+for name in $(ls "${BASHCONF_CONFIG_DIR}/aliases.d"/* | egrep -v '~$'); do
+    if test -f "${name}"; then
+	source "${name}"
+    fi
+done

@@ -1,0 +1,29 @@
+# -*- shell-script -*-
+
+# Source the configuration-bootstrap script if necessary.  We expect it to be
+# in the same directory as the current file.
+if test -z "${BASHCONF_CONFIG_DIR}"; then
+    if test "${BASH_VERSINFO[0]}" -ge 3; then
+        BASHCONF_CONFIG_DIR="$(readlink -f ${BASH_SOURCE})"
+        BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
+    else
+        # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
+        # to determine the correct location is to hardcode it... :|
+        BASHCONF_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
+    fi
+
+    if test -z "${BASHCONF_HAVE_CONFIG}"; then
+        source "${BASHCONF_CONFIG_DIR}/lib/bootstrap"
+    fi
+fi
+
+if test -z "${BASHCONF_HAVE_CONFIG}"; then
+    echo '*** ERROR: Failed to load BASh configuration variables.' \
+	> /dev/stderr
+else
+    bashconf-source-parts "${BASHCONF_CONFIG_DIR}/logout.d"
+fi
+
+# Don't do cleanup on logout -- it's unnecessary since we're about to close the
+# shell anyway.
+#bashconf-cleanup

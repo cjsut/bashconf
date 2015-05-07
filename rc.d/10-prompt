@@ -1,0 +1,41 @@
+# -*- shell-script -*-
+
+set_prompt()
+{
+    local \
+	COLOR_BLACK=30  \
+	COLOR_RED=31 \
+	COLOR_GREEN=32 \
+	COLOR_YELLOW=33 \
+	COLOR_BLUE=34 \
+	COLOR_MAGENTA=35 \
+	COLOR_CYAN=36 \
+	COLOR_WHITE=37 \
+	COLOR_DEFAULT=39 \
+	ATTR_NORMAL=0 \
+	ATTR_BOLD=1 \
+	ATTR_UNDERLINE=4 \
+	ATTR_BLINK=5 \
+	ATTR_INVERSE=7 \
+
+    if [ "${TERM}" != "dumb" ] ; then
+
+    # Parts of PS1 are arranged in this order:
+    # [ time :
+    #  username
+    #  @ host :  # only when a login shell
+    #  CWD ]
+    #  \$
+
+	PS1="\[\e[${ATTR_NORMAL};${COLOR_DEFAULT}m\][\[\e[${COLOR_RED}m\]"'\t'"\[\e[${COLOR_DEFAULT}m\]:\[\e[${COLOR_GREEN}m\]"'\u'"\[\e[${COLOR_DEFAULT}m\]"
+	if shopt -q login_shell ; then
+	    PS1="${PS1}@\[\e[${COLOR_BLUE}m\]"'\h'"\[\e[${COLOR_DEFAULT}m\]"
+	fi
+	PS1="${PS1}:"'\w'"\[\e[${ATTR_NORMAL};${COLOR_DEFAULT}m\]]\[\e[${ATTR_BOLD};${COLOR_WHITE}m\]"'\$'"\[\e[${ATTR_NORMAL};${COLOR_DEFAULT}m\] "
+    else
+	PS1='[\t:\u@\h:\w]\$ '
+    fi
+}
+
+set_prompt
+unset -f set_prompt

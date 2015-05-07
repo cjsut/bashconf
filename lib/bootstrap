@@ -1,0 +1,207 @@
+# -*- shell-script -*-
+# Bootstrap variables for my bash configuration scripts.
+
+if test -z "${BASHCONF_CONFIG_DIR}"; then
+    if test "${BASH_VERSINFO[0]}" -ge 3; then
+        BASHCONF_CONFIG_DIR="$(/bin/readlink -f ${BASH_SOURCE})"
+        BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
+    else
+        # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
+        # to determine the correct location is to hardcode it... :|
+        BASHCONF_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
+    fi
+fi
+
+BASHCONF_LIBRARY_DIR="${BASHCONF_CONFIG_DIR}/lib"
+BASHCONF_SOURCE_PARTS_FILE_REGEX='^[0-9]+-[a-z].*[^~]$'
+BASHCONF_HAVE_CONFIG="true"
+
+source "${BASHCONF_LIBRARY_DIR}/error-utils"
+source "${BASHCONF_LIBRARY_DIR}/array-utils"
+
+
+# Ensure XDG_RUNTIME_DIR is set (it's used by some daemon scripts).
+#
+# FIXME: Consider moving this to an early rc.d script.
+if test -z "${XDG_RUNTIME_DIR}"; then
+    export XDG_RUNTIME_DIR="${HOME}/.local/run"
+fi
+
+## List the source-parts files in ${1} matching ${BASHCONF_SOURCE_PARTS_FILE_REGEX}, in ascending
+# order.
+#
+# 1 source-directory
+bashconf-source-parts-files()
+{
+    /bin/ls "${1}" | /bin/egrep "${BASHCONF_SOURCE_PARTS_FILE_REGEX}" | /usr/bin/sort -n
+}
+
+## Source parts files matching ${BASHCONF_SOURCE_PARTS_FILE_REGEX}
+#  from directory ${1}.
+#
+# 1 source-directory
+bashconf-source-parts()
+{
+    local dir part have_bad_argument=''
+    for dir in "${@}"; do
+	if test ! -d "${dir}"; then
+	    bashconf-report-error "\\\"${dir}\\\": Not a directory."
+	    have_bad_argument='yes'
+	    break
+	fi
+    done
+    if test -z "${have_bad_argument}"; then
+	for dir in "${@}"; do
+	    for part in `bashconf-source-parts-files "${dir}"`; do
+		source "${dir}"/"${part}"
+	    done
+	done
+    fi
+}
+
+# Set a bash source fragment priority in the current directory.
+#
+# FIXME: Consider removal.
+#
+# 1 name
+# 2 priority
+bashconf-set-priority()
+{
+    if test $# -ge 2 -a -n "$1" -a -n "$2" -a ! -f "${2}-${1}"; then
+	local base="${1}"
+	local from="$(ls *${base})"
+	local to="${2}-${1}"
+	mv "${from}" "${to}"
+	if test -f "${from}~"; then
+	    mv "${from}~" "${to}~"
+	fi
+    else
+	echo -e "Usage: bashconf-set-priority NAME PRIORITY\nThis message will also be shown if PRIORITY-NAME already exists." \
+	    > /dev/stderr
+    fi
+	
+}
+
+# Source a "helper" script from ${BASHCONF_LIBRARY_DIR}/helpers.
+#
+# 1 script name
+bashconf-enable-helper()
+{
+    source "${BASHCONF_LIBRARY_DIR}/helpers/${1}"
+}
+
+
+## Erase any trace of bashconf or another package in the shell environment.
+# All non-exported variables and functions with the target prefix will be
+# expunged.
+#
+# If given, the first argument should be the lower-case prefix matching the
+# start of any non-exported functions to be expunged.  The prefix defaults to
+# `bashconf` when not specified.
+#
+# Note that, as a rule, we use `spinal-case` (with hyphens) for lower-case
+# (function) identifiers and `SCREAMING_SNAKE_CASE` for variable names.
+# This function will *only* remove functions and variables that follow their
+# respective conventions.  The variable-name prefix is automatically created
+# from the function-name prefix.
+#
+# 1 (optional) prefix
+bashconf-cleanup()
+{
+    local PREFIX="${1:-bashconf}"
+
+    # Get upper- and lower-case versions of the prefix.
+    local LOWER_PREFIX="${PREFIX,,?}" \
+          UPPER_PREFIX="${PREFIX^^?}"
+
+    # For the upper-case version of the prefix, replace any hyphens
+    # with underscores.
+    UPPER_PREFIX="${UPPER_PREFIX/-/_}"
+
+    # To completely avoid `sed`'s stupid newline behavior (yes, even in
+    # multi-line mode!), we'll just translate newlines to and from some other
+    # arbitrary ASCII character when examining variables.  Let's use the bell
+    # character ('\a').
+    local DQUOTE_RE='"(\a|[^"]|\\\")+"' \
+          ANY_DECLARE_RE='(^|\a)declare( -[^ ]+)?' \
+          EXPORTED_DECLARE_RE='(^|\a)declare -[^ ]*x[^ ]*' \
+          DECL_NAME_RE='[^ \a=]+' \
+          REST_RE='=?'
+    # Fetch lists of exported variables, as well as exported functions and
+    # *all* functions.
+    local EXPORTED_VARIABLES=( $(export -p  | tr '\n' '\a' | sed -re 's!'"${DQUOTE_RE}"'!!g;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'!\a\2!g' | tr '\a' ' ') ) \
+	  EXPORTED_FUNCTIONS=( $(declare -F | sed -re '/'"${EXPORTED_DECLARE_RE}"'/!D;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \2!g') ) \
+	  ALL_FUNCTIONS=( $(declare -F      | sed -re 's!'"${ANY_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \3!g') )
+    
+    # echo "     all functions: $(bashconf-join-array ALL_FUNCTIONS ' ')"
+    # echo "Exported functions: $(bashconf-join-array EXPORTED_FUNCTIONS ' ')"
+    # echo "Exported variables: $(bashconf-join-array EXPORTED_VARIABLES ' ')"
+
+
+    local var func
+
+
+    # Initialize the list of removable variables.
+    eval "local REMOVABLE_VARIABLES=\"\${!${UPPER_PREFIX}*}\""
+
+    # Delete exported variables from the removal list.
+    for var in ${EXPORTED_VARIABLES}; do
+        REMOVABLE_VARIABLES="${REMOVABLE_VARIABLES/${var}/}"
+    done
+
+
+    # Initialize the list of removable functions.  There's no shorthand for
+    # listing function names that match a given prefix, so we'll have to do
+    # it manually.
+    local REMOVABLE_FUNCTIONS='' \
+	  PFXLEN="${#LOWER_PREFIX}"
+    for func in "${ALL_FUNCTIONS[@]}"; do
+	test "${func:0:${PFXLEN}}" = "${LOWER_PREFIX}" \
+	    && REMOVABLE_FUNCTIONS+=" ${func}"
+    done
+
+    # Delete *exported* functions from the removal list.
+    for func in ${EXPORTED_FUNCTIONS}; do
+        REMOVABLE_FUNCTIONS="${REMOVABLE_FUNCTIONS/${func}/}"
+    done
+
+    # echo "Removable functions: ${REMOVABLE_FUNCTIONS}"
+    # echo "Removable variables: ${REMOVABLE_VARIABLES}"
+
+    unset -f ${REMOVABLE_FUNCTIONS}
+    unset -v ${REMOVABLE_VARIABLES}
+}
+
+
+################################################################
+# Path manipulation functions.
+
+# Check if a string exists as an element in PATH.  Returns successfully if the
+# string is an element of PATH, and unsuccessfully otherwise.
+#
+# FIXME: Spaces in path elements aren't handled.  We could use
+#   `bashconf-split-string`, which quotes as necessary, but that slows shell
+#   initialization noticably when this function is used much.
+bashconf-have-path()
+{
+    local -a BASHCONF_PATH_ELEMENTS=( $(echo "${PATH}" | tr ':' ' ') )
+
+    local i
+    for i in ${!BASHCONF_PATH_ELEMENTS[@]}; do
+	test "${BASHCONF_PATH_ELEMENTS[$i]}" = "${1}" && return 1
+    done
+    return 0
+}
+
+# Adds director(ies) to PATH if (a) the directory exists and (b) it's
+# not already in PATH.
+bashconf-add-paths()
+{
+    local path
+    for path in "$@"; do
+	if ! bashconf-have-path "${path}"; then
+	    test -d "${path}" -o -h "${path}" &&
+	        export PATH="${path}:${PATH}"
+        fi
+    done
+}

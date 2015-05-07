@@ -1,0 +1,10 @@
+# -*- shell-script -*-
+
+# Disable Make's builtin rules and definitions.
+#
+# !!WARNING!! This breaks some build systems.  I use it to ensure that my own
+# Make-based build system can stand without the builtin database --- but this
+# alias CAN AND WILL become the bane of your existence when software refuses to
+# build for no apparent reason!
+
+alias make='make -rR'

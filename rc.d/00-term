@@ -1,0 +1,5 @@
+# -*- shell-script -*-
+
+if [ "${TERM}" == "rxvt-256color" ]; then
+    export TERM="rxvt-unicode"
+fi

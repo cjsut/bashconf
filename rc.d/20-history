@@ -1,0 +1,29 @@
+# -*- shell-script -*-
+
+# Migrate the bash history file to ${XDG_DATA_HOME}, and set some
+# options to control the shell history.
+
+HISTFILEDIR="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
+
+# If needed, create the directory where the history file lives.
+test -d "${HISTFILEDIR}" || /bin/mkdir -p "${HISTFILEDIR}"
+
+export HISTCONTROL=ignoredups	# Don't put duplicate lines in the history.
+export HISTFILE="${HISTFILEDIR}/history"
+export HISTFILESIZE="1024"
+export HISTSIZE="${HISTFILESIZE}"
+
+# `help test` incorrectly reports that test -f FILE checks if FILE is
+# a _regular_ file; this does not appear to be the case (it also
+# returns true if FILE is a symlink).
+if test -f "${HOME}/.bash_history"; then
+    if test ! -L "${HOME}/.bash_history" -a ! -a "${HISTFILE}"; then
+	mv "${HOME}/.bash_history" "${HISTFILE}"
+    elif test -L "${HOME}/.bash_history"; then
+	rm "${HOME}/.bash_history"
+    fi
+fi
+
+# No need for bashconf-cleanup here -- we've only got a single variable
+# to remove.
+unset HISTFILEDIR

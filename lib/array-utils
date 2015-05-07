@@ -1,0 +1,174 @@
+# -*- shell-script -*-
+
+# Functions for mangling arrays of strings into strings of arrays and back.
+# Much of this file was written years ago, and I'll freely admit that some
+# parts seem a little misplaced.
+
+. "${BASHCONF_LIBRARY_DIR}/error-utils"
+
+## Convert an array into a string by placing a given string between each
+## element pair.
+#
+#  1 variable-name Name of the variable that contains the array.
+#  2 separator Separator string.
+bashconf-join-array()
+{
+    # Can't use indirection for arrays, unfortunately.
+    local IN="$1"
+    local SEP="$2"
+    eval "IN=(\"\${${IN}[@]}\")"
+    local LEN=${#IN[@]} OUT="${IN[0]}" i elt
+    for (( i = 1; i < LEN; ++i )); do
+        OUT+="${SEP}${IN[i]}"
+    done
+    echo "${OUT}"
+}
+
+## Convert an array of strings to a single string, using '\0' as a
+## record separator.
+bashconf-array-to-stringnul()
+{
+    local OUT="" IN=""
+    if [ $# -gt 0 ] ; then
+	for IN in "$@" ; do
+	    if test -n "$OUT" ; then OUT="${OUT}\0" ; fi
+	    OUT="${OUT}${IN}"
+	done
+    else
+	while read IN ; do
+	    if test -n "${OUT}" ; then OUT="${OUT}\0" ; fi
+	    OUT="${OUT}${IN}"
+	done
+    fi
+    echo -e "${OUT}"
+}
+
+# Escape a string for re-consumption via `eval`.  This is a shortcut for
+# `builtin printf '%q' "$1"`... except when you provide the string "ruby" as
+# the second argument.
+#
+# No, I don't remember why.  We probably shouldn't ask.
+#
+# 1 STRING
+# 2 "ruby" ?!  (Optional)
+bashconf-escape-string()
+{
+    if test -n "${1}" ; then
+	  
+	  local BASE="$(builtin printf '%q' "${1}")"
+	  
+	  case "${2:-bash}" in
+		bash ) echo -n "${BASE}" ;;
+		ruby )
+		    if test "${#1}" -eq 1; then
+			  echo -n "?${1}"
+		    else
+			  local NEEDS_QUOTE=0
+			  if test -n "${1##*[${IFS}]*}"; then
+				NEEDS_QUOTE=1
+			  fi
+
+			  local NEEDS_DBLQUOTE=0
+			  if test "${BASE:0:2}" = "\$'"; then
+				NEEDS_DBLQUOTE=1
+				BASE="${BASE:2}"
+				BASE="${BASE:0:$((${#BASE}-1))}"
+			  fi
+			  if test $NEEDS_DBLQUOTE -eq 0 -a -z "${BASE/*\'*/}"; then
+				NEEDS_DBLQUOTE=1
+			  fi
+			  if test $NEEDS_DBLQUOTE -eq 1; then
+				BASE="\"${BASE/\"/\\\"}\""
+			  fi
+			  echo -n "${BASE}"
+		    fi
+	  esac
+    fi
+}
+
+
+# Split a string on a delimiter, and write to standard output a sequence of
+# characters that can be assigned to a shell variable with `eval` to create an
+# array.  !!SLOW!!
+#
+# Usage: bashconf-split-string [OPTION]... STRING SEPARATOR
+#
+# This function accepts one optional-argument pair:
+#
+#   -v VARNAME		Assign to the resulting array to the global shell
+# 			variable VARNAME.   This allows one to avoid the use of
+# 			`eval`.
+
+bashconf-split-string()
+{
+    local opt VARNAME OPTIND
+    while builtin getopts 'v:' opt; do
+	case "${opt}" in 
+	    v) VARNAME="${OPTARG}";;
+	    ?) bashconf-report-error "${FUNCNAME}: invalid option \`${OPTARG}\`"
+	esac
+    done
+
+    for (( ; OPTIND > 1; --OPTIND )); do
+    	shift
+    done
+
+    local VAL SEP
+    case $# in
+	0 ) return 1;;
+	1 ) VAL="${1}" ;;
+	2 | * ) VAL="${1}"; SEP="${2}";;
+    esac
+    SEP="$(bashconf-escape-string "${SEP}")"
+
+
+    test -z "${VAL}" -o -z "${SEP}" && return 1
+
+    local -a A=()
+    local VALUE NVALUE
+    while test -n "${VAL}"; do
+	VAL="${VAL##${SEP}}"
+	NVALUE="${VAL%%${SEP}*}"
+	VALUE="${NVALUE}"
+	A[${#A[@]}]="${VALUE}"
+	VAL="${VAL##${NVALUE}}"
+	VAL="${VAL##${SEP}}"
+        # test "${LAST_VAL}"="${VAL}" && break
+        # LAST_VAL="${VAL}"
+    done
+
+    
+    # # Print the result in eval'able form.
+    if test -n "${VARNAME}"; then
+	declare -ag "${VARNAME}"
+	VARNAME=( "${A[@]}" )
+    else
+	echo -n '( ';
+	for el in "${A[@]}"; do
+            echo -n "$(bashconf-escape-string "${el}") "
+	done
+	echo ')'
+    fi
+}
+
+# Print out the components of a shell-variable array, one per line.
+# 
+# 1 VARNAME
+bashconf-show-array()
+{
+    test $# -gt 0 || return 1
+    test -v "${1}" || bashconf-report-error "Shell variable '${1}' is not set!"
+
+    local \
+	NL="$(echo -e '\n')" \
+	TAB="$(echo -e '\t')" \
+        INPUT=''
+    eval INPUT=( "\${${1}[@]}" )
+    local \
+	N=${#INPUT[@]} \
+	NN=${#N}
+    
+    for i in ${!INPUT[@]}; do
+	printf "%s[%${NN}i] = %s\n" "${1}" $i "$(bashconf-escape-string "${INPUT[$i]}")"
+    done
+}

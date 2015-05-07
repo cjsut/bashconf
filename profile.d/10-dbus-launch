@@ -1,0 +1,5 @@
+# -*- shell-script -*-
+
+source "${BASHCONF_LIBRARY_DIR}/daemons/dbus"
+dbus-start
+dbus-cleanup

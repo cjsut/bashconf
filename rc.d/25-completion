@@ -1,0 +1,15 @@
+# -*- shell-script -*-
+
+export IFS COMP_WORDBREAKS
+
+# "enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profiles
+# sources /etc/bash.bashrc)."
+if [ -f /etc/bash_completion_lib/bash_completion_lib ]; then
+    . /etc/bash_completion_lib/bash_completion_lib
+elif [ -f /etc/bash_completion ] ; then
+    . /etc/bash_completion
+fi
+
+# Enable completion for wprefix, my Wine prefix-management tool.
+complete -o nospace -C 'wprefix \*complete "${COMP_WORDS[@]}"' wprefix

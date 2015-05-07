@@ -1,0 +1,37 @@
+# -*- shell-script -*-
+# Non-login runtime configuration script for BASh.
+
+# If not running interactively, don't do anything:
+[ -z "$PS1" ] && return
+
+
+# Source the configuration-bootstrap script if necessary.  We expect it to be
+# in the same directory as the current file.
+if test -z "${BASHCONF_CONFIG_DIR}"; then
+    if test "${BASH_VERSINFO[0]}" -ge 3; then
+        BASHCONF_CONFIG_DIR="$(/bin/readlink -f ${BASH_SOURCE})"
+        BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
+    else
+        # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
+        # to determine the correct location is to hardcode it... :|
+        BASHCONF_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
+    fi
+
+    if test -z "${BASHCONF_HAVE_CONFIG}"; then
+        source "${BASHCONF_CONFIG_DIR}/lib/bootstrap"
+    fi
+fi
+
+
+if test -z "${BASHCONF_HAVE_CONFIG}"; then
+    echo '*** ERROR: Failed to load BASh configuration variables.' \
+	> /dev/stderr
+else
+    bashconf-source-parts "${BASHCONF_CONFIG_DIR}/rc.d"
+
+    # `profile` calls (sources) `rc`, so only run bashconf-cleanup if we're not
+    # in `profile`.
+    if test -z "${BASHCONF_IN_PROFILE}"; then
+	bashconf-cleanup
+    fi
+fi

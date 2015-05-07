@@ -1,0 +1,93 @@
+# -*- shell-script -*-
+
+# Most of the functions  [the rxvt-unicode FAQ](http://cvs.schmorp.de/rxvt-unicode/doc/rxvt.7.pod)
+# for the 
+
+RXVT_DEFAULT_FONT_SIZE="11.0"
+RXVT_DEFAULT_FONT="xft:Bitstream Vera Sans Mono"
+RXVT_DEFAULT_FONT_ANTIALIAS="yes"
+
+
+function rxvt-fontset-set
+{
+    [ -n "$@" ] && printf '\e]50;%s\a' "$*"
+}
+
+
+function rxvt-fontset-set-default
+{
+    rxvt-fontset-set "${RXVT_DEFAULT_FONT}:pixelsize=${RXVT_DEFAULT_FONT_SIZE}:antialias=${RXVT_DEFAULT_FONT_ANTIALIAS}"
+}
+
+function rxvt-clear-display
+{
+    printf '\e[ %d J' "$*"
+}
+
+function rxvt-clear-line
+{
+    printf '\e[ %d K' "$*"
+}
+
+function rxvt-window-set-title
+{
+    printf '\e]2;%s \a' "$*"
+}
+
+function rxvt-window-set-icon
+{
+    printf '\e]3;%s \a' "$*"
+}
+
+function rxvt-load-image
+{
+    printf '\e]20;%s\a' "$*"
+}
+
+function rxvt-cursor-up
+{
+    printf '\e[ %d A' "$1"
+}
+
+function rxvt-cursor-down
+{
+    printf '\e[ %d B' "$1"
+}
+
+function rxvt-cursor-forward
+{
+    printf '\e[ %d C' "$1"
+}
+
+function rxvt-cursor-backward
+{
+    printf '\e[ %d D' "$1"
+}
+
+function rxvt-cursor-set-column
+{
+    printf '\e[ %d G' "$1"
+}
+
+alias "rxvt-cursor-save"="echo -ne '\e7'"
+alias "rxvt-cursor-restore"="echo -ne '\e8'"
+
+alias "rxvt-window-raise"="echo -ne '\e[5t'"
+alias "rxvt-window-lower"="echo -ne '\e[6t'"
+alias "rxvt-window-deiconify"="echo -ne '\e[1t'"
+alias "rxvt-window-iconify"="echo -ne '\e[2t'"
+
+if [ -n "$(echo ${TERM} | grep -iE '(rxvt|screen)')" ] ; then
+    # rxvt-fontset-set-default
+
+    ## This makes a hell of a lot of programs work, but breaks others
+    ## (e.g., finch)
+   #export TERM=linux
+
+    # This will break things if the current system doesn't have this
+    # terminfo entry.
+    export TERM=rxvt-unicode
+
+    # Make terminals more-identifiable
+    rxvt-window-set-title $(tty | sed -e 's#/dev/##')@$(hostname)
+fi

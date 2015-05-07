@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Utilities for kernel module management.
+#
+function mod-recursive-rdepends()
+{
+    declare -p MOD_RECURSE_DEPTH > /dev/null 2>&1 \
+        && MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} + 1 )) \
+        || export MOD_RECURSE_DEPTH=0
+    declare -p MOD_USERS  > /dev/null 2>&1 || eval "$(mod-stat)"
+    export MOD_USERS
+
+    local OUT=""
+
+    for mod in ${MOD_USERS[$1]}; do
+        APPEND="$(mod-recursive-rdepends ${mod})"
+        test -n "${OUT}" \
+            && OUT="${OUT} ${APPEND}" \
+            || OUT="${APPEND}"
+    done
+
+    test -n "${MOD_USERS[${mod}]}" && OUT="${OUT} $1" || OUT="$1"
+    
+    test $MOD_RECURSE_DEPTH -eq 0 \
+        && unset MOD_RECURSE_DEPTH MOD_USERS \
+        || MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} - 1 ))
+    echo "${OUT}"
+}
+
+
+function mod-stat()
+{
+    echo 'declare -A MOD_USERS'
+    cut -d ' ' -f 1,4 /proc/modules | sed -e 's#,# #g;s#^\([^ ]\+\)\x20\+\(.\+\)$#MOD_USERS[\1]="\2"#g;s#="-"#=""#g;s# "$#"#g'
+}
+
+## Determine the number of users of the target module.
+#
+# \param	$1	The output of modstat for the target module.
+#
+# \returns	The number of users of the target module.
+function mod-num-users()
+{
+    declare -pA MOD_USERS > /dev/null 2>&1 || eval "$(mod-stat)"
+    local USERS
+    declare -a USERS
+    USERS=( ${MOD_USERS[$1]} )
+    echo ${#USERS[*]}
+}
