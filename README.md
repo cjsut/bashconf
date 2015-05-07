@@ -3,6 +3,7 @@
 Fed up with the long and unmaintainable mess that was my `.bashrc`, I set out
 to make something better.  This is the result.
 
+
 ## Model
 
 Each of the standard Bash configuration files (`.profile`, `.bashrc`, and
@@ -13,6 +14,7 @@ be `${XDG_CONFIG_HOME}/bash`).
 These scripts load the Bashconf utility functions, then use those to source the
 scripts in their respective `.d` directories (`profile.d`, `rc.d`, and
 `logout.d`) in the Bashconf directory.
+
 
 ## Other interesting tidbits
 
@@ -38,6 +40,7 @@ functions.
     these operations easily accessible.  It also changes the font, and will
     sometimes change your terminal type (`TERM`) to `rxvt-unicode`.
 
+
 ## Caveats
 
 *Don't* blindly use my configuration without inspecting what it does!
@@ -49,7 +52,6 @@ Of note is [aliases.d/make](aliases.d/make), which will rudely expose those
 Make-based build systems that depend on rules and definitions in Make's
 built-in database.
 
-Also have a look at rxvt-unic
 
 ## Known Issues
 
