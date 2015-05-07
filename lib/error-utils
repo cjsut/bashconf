@@ -42,7 +42,7 @@ bashconf-get-stderr-redirect()
 #
 # *** TYPE: MESSAGE
 # DETAIL
-report-oops()
+bashconf-report-oops()
 {
     local STR="*** $1: $2" \
 	  RETCODE=1
