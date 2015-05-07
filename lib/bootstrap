@@ -190,9 +190,9 @@ bashconf-have-path()
 
     local i
     for i in ${!BASHCONF_PATH_ELEMENTS[@]}; do
-	test "${BASHCONF_PATH_ELEMENTS[$i]}" = "${1}" && return 1
+	test "${BASHCONF_PATH_ELEMENTS[$i]}" = "${1}" && return 0
     done
-    return 0
+    return 1
 }
 
 # Adds director(ies) to PATH if (a) the directory exists and (b) it's
