@@ -6,8 +6,8 @@ to make something better.  This is the result.
 
 ## Model
 
-Each of the standard Bash configuration files (`.profile`, `.bashrc`, and
-`.logout`) in the user's home directory is symlinked to a corresponding script
+Each of the standard Bash configuration files (`.bash_profile`, `.bashrc`, and
+`.bash_logout`) in the user's home directory is symlinked to a corresponding script
 (`profile`, `rc`, or `logout`) in the Bashconf directory (which is assumed to
 be `${XDG_CONFIG_HOME}/bash`).
 
