@@ -18,6 +18,9 @@ scripts in their respective `.d` directories (`profile.d`, `rc.d`, and
 
 ## Other interesting tidbits
 
+There's [a file in rc.d](rc.d/20-history) that will migrate your Bash history
+file to its proper home in `~/.local/share/bash/`.
+
 The files in [lib/helpers](lib/helpers) contain some interesting shell
 functions.
 
