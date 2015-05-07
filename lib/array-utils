@@ -96,8 +96,7 @@ bashconf-escape-string()
 # This function accepts one optional-argument pair:
 #
 #   -v VARNAME		Assign to the resulting array to the global shell
-# 			variable VARNAME.   This allows one to avoid the use of
-# 			`eval`.
+# 			variable VARNAME.
 
 bashconf-split-string()
 {
@@ -141,7 +140,7 @@ bashconf-split-string()
     # # Print the result in eval'able form.
     if test -n "${VARNAME}"; then
 	declare -ag "${VARNAME}"
-	VARNAME=( "${A[@]}" )
+	eval "${VARNAME}=( \"${A[@]}\" )"
     else
 	echo -n '( ';
 	for el in "${A[@]}"; do
