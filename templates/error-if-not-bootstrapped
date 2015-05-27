@@ -1,0 +1,8 @@
+# -*- shell-script -*-
+
+echo 'if test -z "${BASHCONF_HAVE_CONFIG}"; then
+    echo '*** ERROR: Failed to load Bash configuration variables.' \
+	> /dev/stderr'
+ARG="$(shift)"
+test "$ARG" != 'no-fi' && echo 'fi'
+    

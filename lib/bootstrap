@@ -1,18 +1,7 @@
 # -*- shell-script -*-
 # Bootstrap variables for my bash configuration scripts.
 
-if test -z "${BASHCONF_CONFIG_DIR}"; then
-    if test "${BASH_VERSINFO[0]}" -ge 3; then
-        # This file lives in ${BASHCONF_CONFIG_DIR}/lib.
-        BASHCONF_CONFIG_DIR="$(/bin/readlink -f ${BASH_SOURCE})"
-        BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
-        BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
-    else
-        # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
-        # to determine the correct location is to hardcode it... :|
-        BASHCONF_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
-    fi
-fi
+{{set-bashconf-config-dir:..}}
 
 BASHCONF_LIBRARY_DIR="${BASHCONF_CONFIG_DIR}/lib"
 BASHCONF_SOURCE_PARTS_FILE_REGEX='^[0-9]+-[a-z].*[^~]$'

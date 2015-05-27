@@ -1,0 +1,4 @@
+
+echo 'if test -z "${BASHCONF_HAVE_CONFIG}"; then
+    . "${BASHCONF_CONFIG_DIR}/lib/bootstrap"
+fi'
