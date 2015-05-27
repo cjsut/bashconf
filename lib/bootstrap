@@ -4,7 +4,7 @@
 if test -z "${BASHCONF_CONFIG_DIR}"; then
     if test "${BASH_VERSINFO[0]}" -ge 3; then
         # This file lives in ${BASHCONF_CONFIG_DIR}/lib.
-        BASHCONF_CONFIG_DIR="$(/bin/readlink ${BASH_SOURCE})"
+        BASHCONF_CONFIG_DIR="$(readlink ${BASH_SOURCE})"
         BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
         BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
     else
