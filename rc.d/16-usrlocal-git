@@ -1,0 +1,6 @@
+# -*- shell-script -*-
+
+. "${BASHCONF_LIBRARY_DIR}/package-support"
+
+bashconf-init-packages /usr/local \
+    git=bin,source:contrib/completion/git-completion.bash,
