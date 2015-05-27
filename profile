@@ -5,7 +5,7 @@
 # in the same directory as the current file.
 if test -z "${BASHCONF_CONFIG_DIR}"; then
     if test "${BASH_VERSINFO[0]}" -ge 3; then
-        BASHCONF_CONFIG_DIR="$(readlink -f ${BASH_SOURCE})"
+        BASHCONF_CONFIG_DIR="$(readlink ${BASH_SOURCE})"
         BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
     else
         # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
