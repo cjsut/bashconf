@@ -1,5 +1,0 @@
-# -*- shell-script -*-
-
-source "${BASHCONF_LIBRARY_DIR}/daemons/ssh-agent"
-ssh-agent-stop                  # stop ssh-agent
-ssh-agent-cleanup               # remove all trace of the helper script
