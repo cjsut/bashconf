@@ -86,7 +86,7 @@ if [ -n "$(echo ${TERM} | grep -iE '(rxvt|screen)')" ] ; then
 
     # This will break things if the current system doesn't have this
     # terminfo entry.
-    export TERM=rxvt-unicode
+    #export TERM=rxvt-unicode
 
     # Make terminals more-identifiable
     rxvt-window-set-title $(tty | sed -e 's#/dev/##')@$(hostname)
