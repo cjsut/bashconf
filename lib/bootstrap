@@ -17,6 +17,7 @@ fi
 BASHCONF_LIBRARY_DIR="${BASHCONF_CONFIG_DIR}/lib"
 BASHCONF_SOURCE_PARTS_FILE_REGEX='^[0-9]+-[a-z].*[^~]$'
 BASHCONF_HAVE_CONFIG="true"
+BASHCONF_ON_OSX="$(echo $MACHTYPE | grep -q apple && echo 'yes' || echo 'no')"
 
 source "${BASHCONF_LIBRARY_DIR}/error-utils"
 source "${BASHCONF_LIBRARY_DIR}/array-utils"
@@ -35,7 +36,8 @@ fi
 # 1 source-directory
 bashconf-source-parts-files()
 {
-    /bin/ls "${1}" | /bin/egrep "${BASHCONF_SOURCE_PARTS_FILE_REGEX}" | /usr/bin/sort -n
+    local GREP_REGEXP_FLAG="$(test "$BASHCONF_ON_OSX" = "yes" && echo 'Ee' || echo 'e')"
+    /bin/ls "${1}" | grep -${GREP_REGEXP_FLAG} "${BASHCONF_SOURCE_PARTS_FILE_REGEX}" | /usr/bin/sort -n
 }
 
 ## Source parts files matching ${BASHCONF_SOURCE_PARTS_FILE_REGEX}
@@ -128,13 +130,15 @@ bashconf-cleanup()
           ANY_DECLARE_RE='(^|\a)declare( -[^ ]+)?' \
           EXPORTED_DECLARE_RE='(^|\a)declare -[^ ]*x[^ ]*' \
           DECL_NAME_RE='[^ \a=]+' \
-          REST_RE='=?'
+          REST_RE='=?' \
+          SED_RE_FLAG="$(test "$BASHCONF_ON_OSX" = 'yes' && echo 'E' || echo 'r')"
+
     # Fetch lists of exported variables, as well as exported functions and
     # *all* functions.
-    local EXPORTED_VARIABLES=( $(export -p  | tr '\n' '\a' | sed -re 's!'"${DQUOTE_RE}"'!!g;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'!\a\2!g' | tr '\a' ' ') ) \
-	  EXPORTED_FUNCTIONS=( $(declare -F | sed -re '/'"${EXPORTED_DECLARE_RE}"'/!D;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \2!g') ) \
-	  ALL_FUNCTIONS=( $(declare -F      | sed -re 's!'"${ANY_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \3!g') )
-    
+    local EXPORTED_VARIABLES=( $(export -p  | tr '\n' '\a' | sed -${SED_RE_FLAG}e 's!'"${DQUOTE_RE}"'!!g;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'!\a\2!g' | tr '\a' ' ') ) \
+          EXPORTED_FUNCTIONS=( $(declare -F | sed -${SED_RE_FLAG}e '/'"${EXPORTED_DECLARE_RE}"'/!D;s!'"${EXPORTED_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \2!g') ) \
+          ALL_FUNCTIONS=( $(declare -F      | sed -${SED_RE_FLAG}e 's!'"${ANY_DECLARE_RE} (${DECL_NAME_RE})${REST_RE}"'! \3!g') )
+
     # echo "     all functions: $(bashconf-join-array ALL_FUNCTIONS ' ')"
     # echo "Exported functions: $(bashconf-join-array EXPORTED_FUNCTIONS ' ')"
     # echo "Exported variables: $(bashconf-join-array EXPORTED_VARIABLES ' ')"
