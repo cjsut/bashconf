@@ -2,7 +2,7 @@
 
 # enable color support of ls and also add handy aliases
 if [ "$TERM" != "dumb" ]; then
-    if -n "$BASHCONF_ON_OSX"; then
+    if test -n "$BASHCONF_ON_OSX"; then
 	export CLICOLOR=yes
 	export LSCOLORS="exfxcxdxbxegedabagacad"
     else
