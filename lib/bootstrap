@@ -115,8 +115,14 @@ bashconf-cleanup()
     local PREFIX="${1:-bashconf}"
 
     # Get upper- and lower-case versions of the prefix.
-    local LOWER_PREFIX="${PREFIX,,?}" \
-          UPPER_PREFIX="${PREFIX^^?}"
+    local LOWER_PREFIX UPPER_PREFIX
+    if test "${BASH_VERSINFO[0]}" -ge 4; then
+        LOWER_PREFIX="${PREFIX,,?}"
+        UPPER_PREFIX="${PREFIX^^?}"
+    else
+        LOWER_PREFIX="$(echo ${PREFIX} | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+        UPPER_PREFIX="$(echo ${PREFIX} | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"
+    fi
 
     # For the upper-case version of the prefix, replace any hyphens
     # with underscores.
