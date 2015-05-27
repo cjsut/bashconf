@@ -17,7 +17,7 @@ fi
 BASHCONF_LIBRARY_DIR="${BASHCONF_CONFIG_DIR}/lib"
 BASHCONF_SOURCE_PARTS_FILE_REGEX='^[0-9]+-[a-z].*[^~]$'
 BASHCONF_HAVE_CONFIG="true"
-BASHCONF_ON_OSX="$(echo $MACHTYPE | grep -q apple && echo 'yes' || echo 'no')"
+BASHCONF_ON_OSX="$(echo $MACHTYPE | grep -q apple && echo 'yes')"
 
 source "${BASHCONF_LIBRARY_DIR}/error-utils"
 source "${BASHCONF_LIBRARY_DIR}/array-utils"
@@ -36,7 +36,7 @@ fi
 # 1 source-directory
 bashconf-source-parts-files()
 {
-    local GREP_REGEXP_FLAG="$(test "$BASHCONF_ON_OSX" = "yes" && echo 'Ee' || echo 'e')"
+    local GREP_REGEXP_FLAG="$(test -n "$BASHCONF_ON_OSX" && echo 'Ee' || echo 'e')"
     /bin/ls "${1}" | grep -${GREP_REGEXP_FLAG} "${BASHCONF_SOURCE_PARTS_FILE_REGEX}" | /usr/bin/sort -n
 }
 
@@ -131,7 +131,7 @@ bashconf-cleanup()
           EXPORTED_DECLARE_RE='(^|\a)declare -[^ ]*x[^ ]*' \
           DECL_NAME_RE='[^ \a=]+' \
           REST_RE='=?' \
-          SED_RE_FLAG="$(test "$BASHCONF_ON_OSX" = 'yes' && echo 'E' || echo 'r')"
+          SED_RE_FLAG="$(test -n "$BASHCONF_ON_OSX" && echo 'E' || echo 'r')"
 
     # Fetch lists of exported variables, as well as exported functions and
     # *all* functions.
