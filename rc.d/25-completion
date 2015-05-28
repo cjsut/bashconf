@@ -1,15 +1,27 @@
 # -*- shell-script -*-
 
-export IFS COMP_WORDBREAKS
+if ! shopt -oq posix; then
+    export IFS COMP_WORDBREAKS
 
-# "enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profiles
-# sources /etc/bash.bashrc)."
-if [ -f /etc/bash_completion_lib/bash_completion_lib ]; then
-    . /etc/bash_completion_lib/bash_completion_lib
-elif [ -f /etc/bash_completion ] ; then
-    . /etc/bash_completion
+    # "enable programmable completion features (you don't need to enable
+    # this, if it's already enabled in /etc/bash.bashrc and /etc/profiles
+    # sources /etc/bash.bashrc)."
+
+    for BASHCONF_COMPLETION_FILE in \
+	/etc/bash_completion_lib/bash_completion_lib \
+	/usr/share/bash-completion/bash_completion \
+	/etc/bash_completion \
+	; do
+	if test -f "$BASHCONF_COMPLETION_FILE"; then
+	    . "$BASHCONF_COMPLETION_FILE"
+	    break
+	fi
+    done
+
+    BASHCONF_COMPLETIONS_DIR="${BASHCONF_CONFIG_DIR}/completion.d"
+    if test -d "$BASHCONF_COMPLETIONS_DIR"; then
+	for BASHCONF_COMPLETION_FILE in $(ls "$BASHCONF_COMPLETIONS_DIR"/* | egrep -v '~$'); do
+	    . "$BASHCONF_COMPLETIONS_DIR"
+	done
+    fi
 fi
-
-# Enable completion for wprefix, my Wine prefix-management tool.
-complete -o nospace -C 'wprefix \*complete "${COMP_WORDS[@]}"' wprefix
