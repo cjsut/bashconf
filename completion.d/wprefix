@@ -1,0 +1,4 @@
+# -*- shell-script -*-
+# Enable completion for wprefix, my Wine prefix-management tool.
+
+complete -o nospace -C 'wprefix \*complete "${COMP_WORDS[@]}"' wprefix

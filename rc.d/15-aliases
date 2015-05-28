@@ -1,7 +1,11 @@
 # -*- shell-script -*-
 
-for name in $(ls "${BASHCONF_CONFIG_DIR}/aliases.d"/* | egrep -v '~$'); do
-    if test -f "${name}"; then
-	source "${name}"
-    fi
-done
+BASHCONF_ALIASES_DIR="${BASHCONF_CONFIG_DIR}/aliases.d"
+
+if test -d "$BASHCONF_ALIASES_DIR"; then
+    for BASHCONF_ALIAS_FILE in $(ls "$BASHCONF_ALIASES_DIR"/* | egrep -v '~$'); do
+	if test -f "$BASHCONF_ALIAS_FILE"; then
+	    . "$BASHCONF_ALIAS_FILE"
+	fi
+    done
+fi
