@@ -3,42 +3,47 @@
 # Provides support for using `/opt`-style packages installed in
 # arbitrary prefixes.
 #
-# Usage: init-package <PREFIX NAME=OPT[,OPT]..., [NAME=OPT[,OPT]...,]...>+
-
+# Usage: bashconf-init-package <PREFIX NAME=OPT[,OPT]..., [NAME=OPT[,OPT]...,]...>+
 # where
 #     PREFIX is an install prefix (e.g. "/opt" or "/usr/local")
 #     NAME is the name of a package installed in PREFIX
 #     OPT specifies an action to perform:
 #         `bin` appends `$PREFIX/$NAME/bin` to PATH, if it exists
+#         `bin:RELPATH` appends `$PREFIX/$NAME/$RELPATH` to PATH, if it exists
 #         `source:RELPATH` sources `$PREFIX/$NAME/$RELPATH`, if it exists
 #
 # NOTE THE TRAILING COMMA AFTER EACH OPT LIST.
 bashconf-init-packages() {
-    local -f init-package-handle-spec
-    init-package-handle-spec() {
-	local PREFIX="$1" PKG="$2" SPEC="$3" PKGPREFIX="${1}/${2}"
-	while test -n "$SPEC"; do
-	    case "$SPEC" in
-		,) break ;;
-		,*) SPEC="${SPEC#,}";;
-		bin|bin,*) test -d "${PKGPREFIX}/bin" && \
-		               bashconf-add-paths "${PKGPREFIX}/bin"
-		           SPEC="${SPEC#bin}";;
-		source:*) SPEC="${SPEC#source:}"
-		          SOURCE="${PKGPREFIX}/${SPEC%%,*}"
-			  SPEC="${SPEC/*,}" || SPEC=''
-			  test -a "$SOURCE" && . "$SOURCE";;
-	    esac
-	done
-    }
     local PREFIX
     while test $# -gt 0; do
         case "$1" in
             *=*) test -n "$PREFIX" || bashconf-report-error "PREFIX argument to $0 not yet seen"
-                 init-package-handle-spec "$PREFIX" "${1%%=*}" "${1#*=}";;
+                 bashconf-init-package-handle-spec "$PREFIX" "${1%%=*}" "${1#*=}";;
             *) test -d "$1" && PREFIX="$1" \
                     || bashconf-report-error "prefix `${1}` does not exist";;
         esac
 	shift
+    done
+}
+
+bashconf-init-package-handle-spec() {
+    local PREFIX="$1" PKG="$2" SPEC="$3" PKGPREFIX="${1}/${2}"
+
+    while test -n "$SPEC"; do
+	case "$SPEC" in
+	    ,) break ;;
+	    ,*) SPEC="${SPEC#,}";;
+	    bin|bin,*) test -d "${PKGPREFIX}/bin" && \
+		             bashconf-add-paths "${PKGPREFIX}/bin"
+		       SPEC="${SPEC#bin}";;
+            bin:*) SPEC="${SPEC#bin:}"
+                   local BINPATH="${PKGPREFIX}/${SPEC%%,*}"
+		   SPEC="${SPEC/*,}" || SPEC=''
+                   test -d "$BINPATH" && bashconf-add-paths "$BINPATH";;
+	    source:*) SPEC="${SPEC#source:}"
+                      local SOURCE="${PKGPREFIX}/${SPEC%%,*}"
+		      SPEC="${SPEC/*,}" || SPEC=''
+		      test -a "$SOURCE" && . "$SOURCE";;
+	esac
     done
 }
