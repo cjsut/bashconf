@@ -1,0 +1,6 @@
+# -*- shell-script -*-
+
+. "${BASHCONF_LIBRARY_DIR}/package-support"
+
+bashconf-init-packages /Applications \
+    CMake.app/Contents=bin
