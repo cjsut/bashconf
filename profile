@@ -28,7 +28,7 @@ fi
 . "${BASHCONF_CONFIG_DIR}/lib/bootstrap"
 
 if test -z "${BASHCONF_HAVE_CONFIG}"; then
-    echo '*** ERROR: Failed to load BASh configuration variables.' \
+    echo '*** ERROR: Failed to load Bash configuration variables.' \
 	> /dev/stderr
 else
     BASHCONF_IN_PROFILE=1       # Make sure the `rc` file doesn't run

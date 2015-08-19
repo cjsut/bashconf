@@ -32,7 +32,7 @@ fi
 . "${BASHCONF_CONFIG_DIR}/lib/bootstrap"
 
 if test -z "${BASHCONF_HAVE_CONFIG}"; then
-    echo '*** ERROR: Failed to load BASh configuration variables.' \
+    echo '*** ERROR: Failed to load Bash configuration variables.' \
 	> /dev/stderr
 else
     bashconf-source-parts "${BASHCONF_CONFIG_DIR}/rc.d"
