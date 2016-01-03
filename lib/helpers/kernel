@@ -1,30 +1,36 @@
 #!/bin/bash
 #
+
 # Utilities for kernel module management.
 #
 function mod-recursive-rdepends()
 {
-    declare -p MOD_RECURSE_DEPTH > /dev/null 2>&1 \
-        && MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} + 1 )) \
-        || export MOD_RECURSE_DEPTH=0
-    declare -p MOD_USERS  > /dev/null 2>&1 || eval "$(mod-stat)"
-    export MOD_USERS
+    if test $# -gt 0; then
+        declare -p MOD_RECURSE_DEPTH > /dev/null 2>&1 \
+            && MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} + 1 )) \
+                || export MOD_RECURSE_DEPTH=0
+        declare -p MOD_USERS  > /dev/null 2>&1 || eval "$(mod-stat)"
+        export MOD_USERS
 
-    local OUT=""
+        local OUT=""
 
-    for mod in ${MOD_USERS[$1]}; do
-        APPEND="$(mod-recursive-rdepends ${mod})"
-        test -n "${OUT}" \
-            && OUT="${OUT} ${APPEND}" \
-            || OUT="${APPEND}"
-    done
+        for mod in ${MOD_USERS[$1]}; do
+            APPEND="$(mod-recursive-rdepends ${mod})"
+            test -n "${OUT}" \
+                && OUT="${OUT} ${APPEND}" \
+                    || OUT="${APPEND}"
+        done
 
-    test -n "${MOD_USERS[${mod}]}" && OUT="${OUT} $1" || OUT="$1"
-    
-    test $MOD_RECURSE_DEPTH -eq 0 \
-        && unset MOD_RECURSE_DEPTH MOD_USERS \
-        || MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} - 1 ))
-    echo "${OUT}"
+        test -n "${OUT}" && OUT="${OUT} $1" || OUT="$1"
+
+        test $MOD_RECURSE_DEPTH -eq 0 \
+            && unset MOD_RECURSE_DEPTH MOD_USERS \
+                || MOD_RECURSE_DEPTH=$(( ${MOD_RECURSE_DEPTH} - 1 ))
+        echo "${OUT}"
+    else
+        echo "Usage: mod-recursive-rdepends MODNAME" > /dev/stderr
+        return 1
+    fi
 }
 
 
@@ -36,14 +42,13 @@ function mod-stat()
 
 ## Determine the number of users of the target module.
 #
-# \param	$1	The output of modstat for the target module.
+# \param	$1	Module to count users for.
 #
 # \returns	The number of users of the target module.
 function mod-num-users()
 {
     declare -pA MOD_USERS > /dev/null 2>&1 || eval "$(mod-stat)"
-    local USERS
-    declare -a USERS
+    local -a USERS
     USERS=( ${MOD_USERS[$1]} )
     echo ${#USERS[*]}
 }
