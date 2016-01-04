@@ -6,21 +6,29 @@ SSH_AGENT_PID_FILE="${XDG_RUNTIME_DIR}/ssh-agent/pid"
 # Get the PID of the current SSH agent.
 function ssh-agent-pid()
 {
-    if test -n "${SSH_AGENT_PID}"; then
-        echo "${SSH_AGENT_PID}"
-    elif test -a "${SSH_AGENT_PID_FILE}"; then
-        export SSH_AGENT_PID="$(<${SSH_AGENT_PID_FILE})"
-	echo "${SSH_AGENT_PID}"
-    else
+    if test -z "${SSH_AGENT_PID}"; then
+        if test -a "${SSH_AGENT_PID_FILE}"; then
+            export SSH_AGENT_PID="$(pgrep -F $(<${SSH_AGENT_PID_FILE}))"
+        else
+            local PID="$(pgrep -u$USER ssh-agent)"
+            if test -n "${PID}"; then
+                export SSH_AGENT_PID="${PID}"
+            else
+                return 1
+            fi
+        fi
+    elif ! ps --no-header -p "${SSH_AGENT_PID}" 2>&1 > /dev/null; then
+        export -n SSH_AGENT_PID
+        unset SSH_AGENT_PID
         return 1
     fi
+    echo "${SSH_AGENT_PID}"
 }
 
 # Check if ssh-agent is running
 function ssh-agent-running()
 {
-    local PID="$(ssh-agent-pid)"
-    test -n "${PID}" && ps --no-header -p ${PID} 2>&1 > /dev/null
+    ssh-agent-pid > /dev/null
 }
 
 # Remove any ssh-agent run files.
@@ -33,21 +41,21 @@ function ssh-agent-clean-run-files()
 # Start ssh-agent if necessary.
 function ssh-agent-start()
 {
-    if shopt -q login_shell && test ${SHLVL} -eq 1; then
-        if ! ssh-agent-running; then
+    if test "$1" = '-f' || (shopt -q login_shell && test ${SHLVL} -eq 1); then
+        if ! ssh-agent-running ; then
 	    ssh-agent-clean-run-files \
-		|| report_warning "${FUNCNAME}: failed to clean run files."
+		|| bashconf-report-warning "${FUNCNAME}: failed to clean run files."
             if which "ssh-agent" > /dev/null 2>&1; then
                 mkdir -p "${XDG_RUNTIME_DIR}/ssh-agent" \
-                    || report_error "${FUNCNAME}: Failed to create ssh-agent runtime directory."
+                    || bashconf-report-error "${FUNCNAME}: Failed to create ssh-agent runtime directory."
                 eval "$(ssh-agent -s -a "${SSH_AUTH_SOCK}" | egrep -v '^echo ')" &&
                     echo "${SSH_AGENT_PID}" > "${SSH_AGENT_PID_FILE}" && \
 		    export SSH_AUTH_SOCK SSH_AGENT_PID
             else
-                report_error "${FUNCNAME}: Unable to start SSH agent: not found"
+                bashconf-report-error "${FUNCNAME}: Unable to start SSH agent: not found"
             fi
 	else
-	    report_error "${FUNCNAME}: SSH agent already running."
+	    bashconf-report-error "${FUNCNAME}: SSH agent already running."
         fi
     fi
 
@@ -59,16 +67,16 @@ function ssh-agent-stop()
     if shopt -q login_shell \
 	    && test ${SHLVL} -eq 1; then
 
-	test -v "SSH_AUTH_SOCK" || report_warning "${FUNCNAME}: Environment variable SSH_AUTH_SOCK not set."
-	test -v "SSH_AGENT_PID" || report_error "${FUNCNAME}: Environment variable SSH_AGENT_PID not set; will not stop SSH agent."
+	test -v "SSH_AUTH_SOCK" || bashconf-report-warning "${FUNCNAME}: Environment variable SSH_AUTH_SOCK not set."
+	test -v "SSH_AGENT_PID" || bashconf-report-error "${FUNCNAME}: Environment variable SSH_AGENT_PID not set; will not stop SSH agent."
 
 	if ssh-agent-running; then
 	    eval "$(ssh-agent -k -a "${SSH_AUTH_SOCK}" | egrep -v '^echo ')" \
 		|| report_error "${FUNCNAME}: failed to start SSH agent." \
 		&& (ssh-agent-clean-run-files \
-			   || report_warning "${FUNCNAME}: failed to clean run files.")
+			   || bashconf-report-warning "${FUNCNAME}: failed to clean run files.")
 	else
-	    report_error "${FUNCNAME}: SSH agent not running."
+	    bashconf-report-error "${FUNCNAME}: SSH agent not running."
 	fi
     fi
 }
