@@ -6,7 +6,7 @@ RUST_DIR=~/misc/apps/rust
 if test -d "${RUST_DIR}" -o -h "${RUST_DIR}"; then
     # Packages (subdirs) in $RUST_DIR in which to search for binaries
     # and libraries.
-    RUST_PACKAGES=(rustc cargo)
+    RUST_PACKAGES=($(<"${RUST_DIR}/components"))
 
     # Determine available library and bin directories.
     RUST_LIB_DIRS=()
