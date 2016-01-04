@@ -7,16 +7,15 @@ SSH_AGENT_PID_FILE="${XDG_RUNTIME_DIR}/ssh-agent/pid"
 function ssh-agent-pid()
 {
     if test -z "${SSH_AGENT_PID}"; then
+        local PID
         if test -a "${SSH_AGENT_PID_FILE}"; then
-            export SSH_AGENT_PID="$(pgrep -F $(<${SSH_AGENT_PID_FILE}))"
+            PID="$(pgrep -F ${SSH_AGENT_PID_FILE})"
         else
-            local PID="$(pgrep -u$USER ssh-agent)"
-            if test -n "${PID}"; then
-                export SSH_AGENT_PID="${PID}"
-            else
-                return 1
-            fi
+            PID="$(pgrep -u$USER ssh-agent)"
         fi
+        test -n "${PID}" \
+            && export SSH_AGENT_PID="${PID}" \
+            || return 1
     elif ! ps --no-header -p "${SSH_AGENT_PID}" 2>&1 > /dev/null; then
         export -n SSH_AGENT_PID
         unset SSH_AGENT_PID
