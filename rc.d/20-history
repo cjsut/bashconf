@@ -8,7 +8,7 @@ HISTFILEDIR="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
 # If needed, create the directory where the history file lives.
 test -d "${HISTFILEDIR}" || /bin/mkdir -p "${HISTFILEDIR}"
 
-export HISTCONTROL=ignoredups	# Don't put duplicate lines in the history.
+export HISTCONTROL=ignorespace:ignoredups
 export HISTFILE="${HISTFILEDIR}/history"
 export HISTFILESIZE="1024"
 export HISTSIZE="${HISTFILESIZE}"
