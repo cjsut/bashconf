@@ -10,10 +10,10 @@
 # disable redirection altogether).
 bashconf-get-stderr-redirect()
 {
-    
+
     # All of these are symlinks, actually. On my system:
     # /dev/stderr       -> /dev/fd/2
-    # /dev/fd	        -> /proc/self/fd
+    # /dev/fd           -> /proc/self/fd
     # /proc/self/fd/2   -> (terminal device, probably the same as the
     #                       output of the `tty' command.)
     #
@@ -21,12 +21,12 @@ bashconf-get-stderr-redirect()
     # /dev/stderr makes more sense than something with numbers in
     # it. ;)
     for f in '/dev/stderr' '/dev/fd/2' '/proc/self/fd/2'; do
-	# Use the first one that looks like a character special
-	# device.
-	if test -c "$f" ; then
-	    echo "> $f"
-	    return
-	fi
+        # Use the first one that looks like a character special
+        # device.
+        if test -c "$f" ; then
+            echo "> $f"
+            return
+        fi
     done
 }
 
@@ -45,7 +45,7 @@ bashconf-get-stderr-redirect()
 bashconf-report-oops()
 {
     local STR="*** $1: $2" \
-	  RETCODE=1
+          RETCODE=1
     test $# -ge 4 && RETCODE=$4
 
     # If DETAIL is given, append it to the output string after piping

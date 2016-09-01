@@ -3,19 +3,19 @@
 
 if test -z "${BASHCONF_CONFIG_DIR}"; then
     if test "${BASH_VERSINFO[0]}" -ge 3; then
-	# Get the (actual) location of this file.
-	test -L "$BASH_SOURCE" \
-	    && BASHCONF_CONFIG_DIR="$(readlink "$BASH_SOURCE")" \
-	    || BASHCONF_CONFIG_DIR="$BASH_SOURCE"
+        # Get the (actual) location of this file.
+        test -L "$BASH_SOURCE" \
+            && BASHCONF_CONFIG_DIR="$(readlink "$BASH_SOURCE")" \
+            || BASHCONF_CONFIG_DIR="$BASH_SOURCE"
 
-	# Ensure we have an absolute path.
-	test "${BASHCONF_CONFIG_DIR:0:1}" = '/' \
-	    || BASHCONF_CONFIG_DIR="$PWD/$BASHCONF_CONFIG_DIR"
+        # Ensure we have an absolute path.
+        test "${BASHCONF_CONFIG_DIR:0:1}" = '/' \
+            || BASHCONF_CONFIG_DIR="$PWD/$BASHCONF_CONFIG_DIR"
 
         # Remove components until `$BASHCONF_CONFIG_DIR/lib/bootstrap` exists.
-	while test -n "${BASHCONF_CONFIG_DIR}" -a ! -f "${BASHCONF_CONFIG_DIR}/lib/bootstrap"; do
+        while test -n "${BASHCONF_CONFIG_DIR}" -a ! -f "${BASHCONF_CONFIG_DIR}/lib/bootstrap"; do
             BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
-	done
+        done
     else
         # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
         # to determine the correct location is to hardcode it... :|
@@ -56,18 +56,19 @@ bashconf-source-parts()
 {
     local dir part have_bad_argument=''
     for dir in "${@}"; do
-	if test ! -d "${dir}"; then
-	    bashconf-report-error "\\\"${dir}\\\": Not a directory."
-	    have_bad_argument='yes'
-	    break
-	fi
+        if test ! -d "${dir}"; then
+            bashconf-report-error "\\\"${dir}\\\": Not a directory."
+            have_bad_argument='yes'
+            break
+        fi
     done
     if test -z "${have_bad_argument}"; then
-	for dir in "${@}"; do
-	    for part in `bashconf-source-parts-files "${dir}"`; do
-		source "${dir}"/"${part}"
-	    done
-	done
+        for dir in "${@}"; do
+            bashconf-report-debug "Sourcing parts files in ${dir}..."
+            for part in `bashconf-source-parts-files "${dir}"`; do
+                source "${dir}"/"${part}"
+            done
+        done
     fi
 }
 
@@ -80,18 +81,18 @@ bashconf-source-parts()
 bashconf-set-priority()
 {
     if test $# -ge 2 -a -n "$1" -a -n "$2" -a ! -f "${2}-${1}"; then
-	local base="${1}"
-	local from="$(ls *${base})"
-	local to="${2}-${1}"
-	mv "${from}" "${to}"
-	if test -f "${from}~"; then
-	    mv "${from}~" "${to}~"
-	fi
+        local base="${1}"
+        local from="$(ls *${base})"
+        local to="${2}-${1}"
+        mv "${from}" "${to}"
+        if test -f "${from}~"; then
+            mv "${from}~" "${to}~"
+        fi
     else
-	echo -e "Usage: bashconf-set-priority NAME PRIORITY\nThis message will also be shown if PRIORITY-NAME already exists." \
-	    > /dev/stderr
+        echo -e "Usage: bashconf-set-priority NAME PRIORITY\nThis message will also be shown if PRIORITY-NAME already exists." \
+            > /dev/stderr
     fi
-	
+
 }
 
 # Source a "helper" script from ${BASHCONF_LIBRARY_DIR}/helpers.
@@ -174,10 +175,10 @@ bashconf-cleanup()
     # listing function names that match a given prefix, so we'll have to do
     # it manually.
     local REMOVABLE_FUNCTIONS='' \
-	  PFXLEN="${#LOWER_PREFIX}"
+          PFXLEN="${#LOWER_PREFIX}"
     for func in "${ALL_FUNCTIONS[@]}"; do
-	test "${func:0:${PFXLEN}}" = "${LOWER_PREFIX}" \
-	    && REMOVABLE_FUNCTIONS+=" ${func}"
+        test "${func:0:${PFXLEN}}" = "${LOWER_PREFIX}" \
+            && REMOVABLE_FUNCTIONS+=" ${func}"
     done
 
     # Delete *exported* functions from the removal list.
