@@ -4,36 +4,35 @@
 RUST_DIR=~/misc/apps/rust
 
 if test -d "${RUST_DIR}" -o -h "${RUST_DIR}"; then
-    # Packages (subdirs) in $RUST_DIR in which to search for binaries
-    # and libraries.
-    RUST_PACKAGES=($(<"${RUST_DIR}/components"))
+    RUST_BIN_DIR="${RUST_DIR}/bin"
+    RUST_LIB_DIR="${RUST_DIR}/lib"
+    # Apparently Info thinks MANPATH, when set, has to include default (system)
+    # directories as well. :(
+    #RUST_MAN_DIR="${RUST_DIR}/share/man"
 
-    # Determine available library and bin directories.
-    RUST_LIB_DIRS=()
-    RUST_BIN_DIRS=()
+    if test -d "${RUST_BIN_DIR}" -o -h "${RUST_BIN_DIR}"; then
+        bashconf-add-paths "${RUST_BIN_DIR}"
 
-    for RUST_PACKAGE in "${RUST_PACKAGES[@]}"; do
-        RUST_PACKAGE_BIN_DIR="${RUST_DIR}/${RUST_PACKAGE}/bin"
-        RUST_PACKAGE_LIB_DIR="${RUST_DIR}/${RUST_PACKAGE}/lib"
+        # If Rust is using its own library directory, add an alias for each
+        # Rust executable that sets LD_LIBRARY_PATH to that directory.
+        if test -d "${RUST_LIB_DIR}" -o -h "${RUST_LIB_DIR}"; then
+            for RUST_BINARY in $(find "${RUST_BIN_DIR}" -type f -executable); do
+                RUST_BINARY="$(basename "${RUST_BINARY}")"
+                eval "alias ${RUST_BINARY}='LD_LIBRARY_PATH="${RUST_LIB_DIR}" ${RUST_BINARY}'"
+            done
+        fi
 
-        test -d "${RUST_PACKAGE_BIN_DIR}" &&
-            RUST_BIN_DIRS[${#RUST_BIN_DIRS[@]}]="${RUST_PACKAGE_BIN_DIR}"
-        test -d "${RUST_PACKAGE_LIB_DIR}" &&
-            RUST_LIB_DIRS[${#RUST_LIB_DIRS[@]}]="${RUST_PACKAGE_LIB_DIR}"
-    done
-
-    if test "${#RUST_BIN_DIRS[@]}" -gt 0; then 
-        # Add Rust bin directories to PATH.
-        bashconf-add-paths "${RUST_BIN_DIRS[@]}"
-
-        # Alias all Rust binaries to use the correct LD_LIBRARY_PATH.
-        RUST_LD_LIBRARY_PATH="$(bashconf-join-array RUST_LIB_DIRS ':')"
-        for RUST_BINARY in $(find "${RUST_BIN_DIRS[@]}" -type f -executable); do
-            RUST_BINARY=$(basename ${RUST_BINARY})
-            eval "alias ${RUST_BINARY}='LD_LIBRARY_PATH="${RUST_LD_LIBRARY_PATH}" ${RUST_BINARY}'"
-        done
+        # Add the Rust manpages directory if present.
+        if test -d "${RUST_MAN_DIR}" -o -h "${RUST_MAN_DIR}"; then
+            if test -n "${MANPATH}"; then
+                export MANPATH="${RUST_MAN_DIR}"
+            else
+                export MANPATH="${RUST_MAN_DIR}:${MANPATH}"
+            fi
+        fi
     fi
 fi
+
 
 # Remove all functions/variables from this script.
 bashconf-cleanup rust
