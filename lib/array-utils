@@ -43,6 +43,44 @@ bashconf-array-to-stringnul()
     echo -e "${OUT}"
 }
 
+# bashconf-downcase: echo all arguments, converted to lower-case.
+# bashconf-upcase: echo all arguments, converted to upper-case.
+#
+# In Bash version 4 and higher, these functions use shell variable-expansion
+# transformations; otherwise `tr` is used.
+if test "${BASH_VERSINFO[0]}" -ge 4; then
+    bashconf-downcase()
+    {
+        while test -n "$1"; do
+            echo "${1,,?}"
+            shift
+        done
+    }
+    bashconf-upcase()
+    {
+        while test -n "$1"; do
+            echo "${1^^?}"
+            shift
+        done
+    }
+else
+    bashconf-downcase()
+    {
+        while test -n "$1"; do
+            echo "$1" | tr '[:upper:]' '[:lower:]'
+            shift
+        done
+    }
+    bashconf-upcase()
+    {
+        while test -n "$1"; do
+            echo "$1" | tr '[:lower:]' '[:upper:]'
+            shift
+        done
+    }
+fi
+
+
 # Escape a string for re-consumption via `eval`.  This is a shortcut for
 # `builtin printf '%q' "$1"`... except when you provide the string "ruby" as
 # the second argument.
