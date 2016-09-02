@@ -1,6 +1,27 @@
 # -*- shell-script -*-
 # Utility functions for use in shell scripts.
 
+if test -z "$BASHCONF_LOG_LEVEL"; then
+    # Minimum message severity required for a message to be printed.
+    BASHCONF_LOG_LEVEL=info
+fi
+
+# Mapping from log-level names to numerical priorities.
+declare -A BASHCONF_LOG_PRIORITIES='([error]=9 [warning]=6 [info]=3 [debug]=0)'
+
+## Determine if the priority of the current logging level is greater
+# than or equal to the priority of the named logging level.
+#
+# Returns 0 if priority($BASHCONF_LOG_LEVEL) <= priority($LEVEL) --
+# i.e. the threshold priority is below the priority of the given level
+# name -- and non-zero otherwise.
+#
+# Usage: bashconf-log-level-at-least LEVEL
+bashconf-log-level-at-least()
+{
+    test ${BASHCONF_LOG_PRIORITIES[$BASHCONF_LOG_LEVEL]} -le ${BASHCONF_LOG_PRIORITIES[$1]}
+}
+
 ## Generate a redirect string for use in reporting errors and the
 #  like.  If no suitable stderr file can be found, returns (prints) an
 #  empty string.
@@ -36,7 +57,7 @@ bashconf-get-stderr-redirect()
 # message.  DETAIL will be automatically reformatted using fmt from
 # coreutils.
 #
-# Usage: report_oops TYPE MESSAGE [DETAIL] [RETURN-CODE]
+# Usage: bashconf-report-oops TYPE MESSAGE [DETAIL] [RETURN-CODE]
 #
 # Output is in the form below.
 #
@@ -44,48 +65,68 @@ bashconf-get-stderr-redirect()
 # DETAIL
 bashconf-report-oops()
 {
-    local STR="*** $1: $2" \
-          RETCODE=1
-    test $# -ge 4 && RETCODE=$4
+    if bashconf-log-level-at-least "${1,,?}"; then
+        local STR="*** $1: $2" \
+              RETCODE=1
+        test $# -ge 4 && RETCODE=$4
 
-    # If DETAIL is given, append it to the output string after piping
-    # it through fmt.
-    if test x"$3" != x ; then
-	STR="$STR\n`echo '$3' | fmt`"
+        # If DETAIL is given, append it to the output string after piping
+        # it through fmt.
+        if test x"$3" != x ; then
+            STR="$STR\n$(echo '$3' | fmt)"
+        fi
+
+        # Output the message.
+        #
+        # To redirect using the computed redirection string (possibly
+        # empty), we (unfortunately) need to use eval.
+        #
+        # FIXME: Are there any nasty security implications here?
+        #
+        # N.B. the use of proper shell quoting for eval.
+        eval echo -e "\"$STR\"" `bashconf-get-stderr-redirect`
     fi
-
-    # Output the message.
-    #
-    # To redirect using the computed redirection string (possibly
-    # empty), we (unfortunately) need to use eval.
-    #
-    # FIXME: Are there any nasty security implications here?
-    #
-    # N.B. the use of proper shell quoting for eval.
-    eval echo "\"$STR\"" `bashconf-get-stderr-redirect`
     return $RETCODE
 }
 
-## Report an error using report_oops.
+## Report an error using bashconf-report-oops.
 #
-# Usage: report_error MESSAGE [DETAIL]
+# Usage: bashconf-report-error MESSAGE [DETAIL]
 bashconf-report-error()
 {
     bashconf-report-oops ERROR "$@"
 }
 
-## Report a warning using report_oops.
+## Report a warning using bashconf-report-oops.
 #
-# Usage: report_warning MESSAGE [DETAIL]
+# Usage: bashconf-report-warning MESSAGE [DETAIL]
 bashconf-report-warning()
 {
     bashconf-report-oops WARNING "$@"
 }
 
+## Report non-critical information using bashconf-report-oops.
+#
+# Usage: bashconf-report-info MESSAGE [DETAIL]
+bashconf-report-info()
+{
+    bashconf-report-oops INFO "$@"
+}
 
-## Report an error and kill the script.  Same syntax as report_error.
-# Use this to avoid snafus when a critical item fails and you wish to
-# abort the script.
+
+## Print some debug information using bashconf-report-oops.
+#
+# Usage: bashconf-report-debug MESSAGE [DETAIL]
+bashconf-report-debug()
+{
+    bashconf-report-oops DEBUG "$@"
+}
+
+
+## Report an error and kill the script.
+#
+# Same syntax as bashconf-report-error.  Use this to avoid snafus when
+# a critical item fails and you wish to abort the script.
 bashconf-die-error()
 {
     bashconf-report-error "$@"
