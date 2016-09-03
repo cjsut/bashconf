@@ -56,8 +56,6 @@ function ssh-agent-start()
             else
                 bashconf-report-error "${FUNCNAME}: Unable to start SSH agent: not found"
             fi
-	else
-	    bashconf-report-error "${FUNCNAME}: SSH agent already running."
         fi
     fi
 
@@ -72,13 +70,13 @@ function ssh-agent-stop()
         test -v "SSH_AUTH_SOCK" || bashconf-report-warning "${FUNCNAME}: Environment variable SSH_AUTH_SOCK not set."
         test -v "SSH_AGENT_PID" || bashconf-report-error "${FUNCNAME}: Environment variable SSH_AGENT_PID not set; will not stop SSH agent."
 
-	    bashconf-report-error "${FUNCNAME}: SSH agent not running."
         if ssh-agent-running; then
             eval "$(ssh-agent -k -a "${SSH_AUTH_SOCK}" | egrep -v '^echo ')" \
                 || report_error "${FUNCNAME}: failed to start SSH agent." \
                 && (ssh-agent-clean-run-files \
                            || bashconf-report-warning "${FUNCNAME}: failed to clean run files.")
         else
+            bashconf-report-info "${FUNCNAME}: SSH agent not running."
         fi
     fi
 }
