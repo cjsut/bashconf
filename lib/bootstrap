@@ -48,10 +48,10 @@ bashconf-source-parts-files()
     ls "${1}" | grep -E "${BASHCONF_SOURCE_PARTS_FILE_REGEX}" | sort -n
 }
 
-## Source parts files matching ${BASHCONF_SOURCE_PARTS_FILE_REGEX}
-#  from directory ${1}.
+# Usage: bashconf-source-parts DIRECTORY...
 #
-# 1 source-directory
+# Source parts files matching ${BASHCONF_SOURCE_PARTS_FILE_REGEX} from
+# each DIRECTORY given as an argument.
 bashconf-source-parts()
 {
     local dir part have_bad_argument=''
@@ -235,6 +235,10 @@ bashconf-cleanup()
 
 ################################################################
 # Path manipulation functions.
+
+# FIXME: `bashconf-add-paths` exhibits O(n*m) [quadratic!] behavior for `n`
+# values in PATH and `m` candidates to be added to PATH.  Does Bash support
+# directly testing if a value is already an element of an array?
 
 # Check if a string exists as an element in PATH.  Returns successfully if the
 # string is an element of PATH, and unsuccessfully otherwise.

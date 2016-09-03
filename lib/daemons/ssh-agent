@@ -8,6 +8,8 @@ bashconf-export --scope=user SSH_AUTH_SOCK
 function ssh-agent-pid()
 {
     if test -z "${SSH_AGENT_PID}"; then
+        # No PID environment variable; attempt to load it from the
+        # file.
         local PID
         if test -a "${SSH_AGENT_PID_FILE}"; then
             PID="$(pgrep -F ${SSH_AGENT_PID_FILE})"
@@ -38,7 +40,12 @@ function ssh-agent-clean-run-files()
 }
 
 
-# Start ssh-agent if necessary.
+# Usage: ssh-agent-start [-f]
+#
+# Start ssh-agent in top-level login shells if not already running and
+# accessible.  With `-f`, the agent may be started on non-top-level,
+# non-login shells.
+#
 function ssh-agent-start()
 {
     if test "$1" = '-f' || (shopt -q login_shell && test ${SHLVL} -eq 1); then
@@ -61,6 +68,8 @@ function ssh-agent-start()
 
 }
 
+# Usage: ssh-agent-stop
+#
 # Stop the ssh agent and remove run files.
 function ssh-agent-stop()
 {
@@ -85,4 +94,3 @@ function ssh-agent-cleanup()
 {
     bashconf-cleanup 'ssh-agent'
 }
-
