@@ -3,15 +3,36 @@
 
 dbus-start()
 {
-    if shopt -q login_shell \
-	    && test ${SHLVL} -eq 1 \
-	    && which "dbus-launch" > /dev/null 2>&1 \
-	   && test -z "${DBUS_SESSION_BUS_ADDRESS}" ; then
-	eval "$(dbus-launch --sh-syntax)"
-	export DBUS_SESSION_BUS_ADDRESS
-	export DBUS_SESSION_BUS_PID
+    if test "$1" != '-f' || (! shopt -q login_shell || test ${SHLVL} -eq 1); then
+	bashconf-report-info \
+	    'Not starting session bus' \
+	    'Non-login or nested shell detected.'
+    elif ! which "dbus-launch" > /dev/null 2>&1; then
+	bashconf-report-warning \
+	    'Not starting session bus' \
+	    'Could not find `dbus-launch` in the path'
+    elif test -n "${DBUS_SESSION_BUS_ADDRESS}" ; then
+	bashconf-report-info \
+	    'Not starting session bus' \
+	    '`DBUS_SESSION_BUS_ADDRESS` is already set'
+    else
+	local LAUNCH_OUTPUT="$(dbus-launch --sh-syntax)"
+	bashconf-report-debug 'Output from `dbus-launch`:' "$LAUNCH_OUTPUT"
+
+	eval "${LAUNCH_OUTPUT}"
+
+	if test -z "${DBUS_SESSION_BUS_ADDRESS}"; then
+	    bashconf-report-error \
+		'No DBus session-bus address set' \
+		"\`DBUS_SESSION_BUS_ADDRESS\` was not set after evaluating the output of \`dbus-launch\`, which was:\n\n${LAUNCH_OUTPUT}"
+	else
+	    bashconf-export \
+		--scope=user DBUS_SESSION_BUS_ADDRESS \
+		--scope=session DBUS_SESSION_BUS_PID
+	fi
     fi
 }
+
 
 
 dbus-cleanup()
