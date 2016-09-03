@@ -6,6 +6,22 @@
 
 . "${BASHCONF_LIBRARY_DIR}/error-utils"
 
+## Convert the argument list into a string by placing the first argument
+## between each pair of subsequent arguments.
+#
+#  1 separator Separator string.
+#  rest Strings to join.
+bashconf-join()
+{
+    local SEP="$1"; shift
+    local OUT="$1"; shift
+    while test $# -gt 0; do
+        OUT+="${SEP}$1"
+        shift
+    done
+    echo "${OUT}"
+}
+
 ## Convert an array into a string by placing a given string between each
 ## element pair.
 #
