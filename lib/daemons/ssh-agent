@@ -2,6 +2,7 @@
 
 SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/ssh-agent/auth-sock"
 SSH_AGENT_PID_FILE="${XDG_RUNTIME_DIR}/ssh-agent/pid"
+bashconf-export --scope=user SSH_AUTH_SOCK
 
 # Get the PID of the current SSH agent.
 function ssh-agent-pid()
@@ -49,7 +50,9 @@ function ssh-agent-start()
                     || bashconf-report-error "${FUNCNAME}: Failed to create ssh-agent runtime directory."
                 eval "$(ssh-agent -s -a "${SSH_AUTH_SOCK}" | egrep -v '^echo ')" &&
                     echo "${SSH_AGENT_PID}" > "${SSH_AGENT_PID_FILE}" && \
-		    export SSH_AUTH_SOCK SSH_AGENT_PID
+                    bashconf-export \
+                        --scope=user SSH_AUTH_SOCK \
+                        --scope=session SSH_AGENT_PID
             else
                 bashconf-report-error "${FUNCNAME}: Unable to start SSH agent: not found"
             fi

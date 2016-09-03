@@ -72,6 +72,51 @@ bashconf-source-parts()
     fi
 }
 
+# Usage: bashconf-export [OPTION]... VAR=VALUE...
+#
+# Make environment-variable values available to other processes.  The
+# scope in which exported values are seen depends on the scope, which
+# can be set with the `--scope=` option.  If not given, the default is
+# user scope.
+#
+#
+#   --scope=SCOPE  Set the scope in which to export the following
+#                  variables.  Valid values are:
+#
+#                  user     export to all sessions for the current
+#                           user
+#
+#                  session  export for the current session only
+#
+#
+bashconf-export()
+{
+    local SCOPE=user
+    while test $# -gt 0; do
+        case "$1" in
+            --scope=* ) SCOPE="${1##--scope=}" ;;
+            *=*) bashconf-export-single "$SCOPE" "$1" ;;
+            * ) bashconf-export-single "$SCOPE" "$1=${!1}" ;;
+        esac
+        shift
+    done
+}
+
+# Usage: bashconf-export-single SCOPE VAR=VALUE
+#
+# Helper intended for use by bashconf-export only.
+bashconf-export-single()
+{
+    eval "export \"$2\""
+
+    # FIXME: this should use some sort of modular backend!
+    case $1 in
+        user) systemctl --user set-environment "$2" ;;
+        session) ;;
+    esac
+}
+
+
 # Set a bash source fragment priority in the current directory.
 #
 # FIXME: Consider removal.
