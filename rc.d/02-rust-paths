@@ -30,6 +30,12 @@ if test -d "${RUST_DIR}" -o -h "${RUST_DIR}"; then
                 export MANPATH="${RUST_MAN_DIR}:${MANPATH}"
             fi
         fi
+
+        if test -d "${RUST_DIR}/etc/bash_completion.d"; then
+            for RUST_COMPLETION_FILE in "${RUST_DIR}/etc/bash_completion.d"/*; do
+                . "${RUST_COMPLETION_FILE}"
+            done
+        fi
     fi
 fi
 
