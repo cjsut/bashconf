@@ -9,7 +9,7 @@ fi
 # Mapping from log-level names to numerical priorities.
 declare -A BASHCONF_LOG_PRIORITIES='([error]=9 [warning]=6 [info]=3 [debug]=0)'
 
-## Determine if the priority of the current logging level is greater
+## Determine if the priority of the current logging level is less
 # than or equal to the priority of the named logging level.
 #
 # Returns 0 if priority($BASHCONF_LOG_LEVEL) <= priority($LEVEL) --
