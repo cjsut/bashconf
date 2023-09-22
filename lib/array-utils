@@ -4,7 +4,7 @@
 # Much of this file was written years ago, and I'll freely admit that some
 # parts seem a little misplaced.
 
-. "${BASHCONF_LIBRARY_DIR}/error-utils"
+. "${BASHCONF_LIBRARY_DIR-$(dirname ${BASH_SOURCE})}/error-utils"
 
 ## Convert the argument list into a string by placing the first argument
 ## between each pair of subsequent arguments.
@@ -216,9 +216,8 @@ bashconf-show-array()
 	NL="$(echo -e '\n')" \
 	TAB="$(echo -e '\t')" \
         INPUT=''
-    eval INPUT=( "\${${1}[@]}" )
     local \
-	N=${#INPUT[@]} \
+	N=${#$1[@]} \
 	NN=${#N}
     
     for i in ${!INPUT[@]}; do
