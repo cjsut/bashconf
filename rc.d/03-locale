@@ -1,4 +1,4 @@
 # -*- shell-script -*-
 
 . /etc/default/locale
-export LANG LANGUAGE LC_ALL
+export LANG LANGUAGE LC_ALL=C.UTF-8 LC_CTYPE=C.UTF-8
