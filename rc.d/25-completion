@@ -20,7 +20,7 @@ if ! shopt -oq posix; then
 
     BASHCONF_COMPLETIONS_DIR="${BASHCONF_CONFIG_DIR}/completion.d"
     if test -d "$BASHCONF_COMPLETIONS_DIR"; then
-	for BASHCONF_COMPLETION_FILE in $(ls "$BASHCONF_COMPLETIONS_DIR"/* | egrep -v '~$'); do
+	for BASHCONF_COMPLETION_FILE in $(command ls "$BASHCONF_COMPLETIONS_DIR"/* | egrep -v '~$'); do
 	    . "$BASHCONF_COMPLETION_FILE"
 	done
     fi
