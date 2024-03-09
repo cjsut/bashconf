@@ -1,0 +1,7 @@
+# -*- shell-script -*-
+# WSL integration for Bash
+
+if test -n "$WSLENV"; then
+    # Extract Windows-specific paths from PATH so we can re-add them later, in a different place
+    WSL_PATHS="/mnt/c${PATH#*:/mnt/c}"
+fi

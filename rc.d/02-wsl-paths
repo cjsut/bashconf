@@ -1,0 +1,7 @@
+# -*- shell-script -*-
+
+if test -n "$WSLENV" -a -n "$WSL_PATHS"; then
+    # Re-add the WSL paths removed earlier
+    PATH="$PATH:$WSL_PATHS"
+fi
+bashconf-cleanup wsl
