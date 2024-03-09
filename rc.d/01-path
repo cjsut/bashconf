@@ -1,5 +1,7 @@
 # -*- shell-script -*-
 
+export BASHCONF_PATH_ORIG="$PATH"
+
 PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 bashconf-add-paths \
     ~/.local/bin \
