@@ -5,19 +5,10 @@
 # in lib/bootstrap relative to the current file.
 if test -z "${BASHCONF_CONFIG_DIR}"; then
     if test "${BASH_VERSINFO[0]}" -ge 3; then
-	# Get the (actual) location of this file.
-	test -L "$BASH_SOURCE" \
-	    && BASHCONF_CONFIG_DIR="$(readlink "$BASH_SOURCE")" \
-	    || BASHCONF_CONFIG_DIR="$BASH_SOURCE"
-
-	# Ensure we have an absolute path.
-	test "${BASHCONF_CONFIG_DIR:0:1}" = '/' \
-	    || BASHCONF_CONFIG_DIR="$HOME/$BASHCONF_CONFIG_DIR"
-
-        # Remove components until `$BASHCONF_CONFIG_DIR/lib/bootstrap` exists.
-	while test -n "${BASHCONF_CONFIG_DIR}" -a ! -f "${BASHCONF_CONFIG_DIR}/lib/bootstrap"; do
-            BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
-	done
+        BASHCONF_CONFIG_DIR="$(realpath "$BASH_SOURCE")"
+        while test -n "${BASHCONF_CONFIG_DIR}" -a ! -f "${BASHCONF_CONFIG_DIR}/lib/bootstrap"; do
+                BASHCONF_CONFIG_DIR="${BASHCONF_CONFIG_DIR%/*}"
+        done
     else
         # Prior to v3.0, Bash didn't supply the BASH_SOURCE variable; the best way
         # to determine the correct location is to hardcode it... :|
