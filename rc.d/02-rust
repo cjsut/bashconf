@@ -1,0 +1,13 @@
+# -*- shell-script -*-
+
+RUST_CARGO_DIR="$HOME/.cargo"
+
+if test -d $RUST_CARGO_DIR -a -f "$RUST_CARGO_DIR/env"; then
+    . "$RUST_CARGO_DIR/env"
+fi
+
+if ! test -a "$BASHCONF_DIR/completion.d/rust"; then
+    rustup completions bash > "$BASHCONF_CONFIG_DIR/completion.d/rust"
+fi
+
+bashconf-cleanup rust
