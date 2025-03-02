@@ -27,7 +27,7 @@ set_prompt()
     #  CWD ]
     #  \$
 
-	PS1="\[\e[${ATTR_NORMAL};${COLOR_DEFAULT}m\][\[\e[${COLOR_RED}m\]"'\t'"\[\e[${COLOR_DEFAULT}m\]:\[\e[${COLOR_GREEN}m\]"'\u'"\[\e[${COLOR_DEFAULT}m\]"
+	PS1="\[\e[${ATTR_NORMAL};${COLOR_DEFAULT}m\][\[\e[${COLOR_CYAN}m\]"'\t'"\[\e[${COLOR_DEFAULT}m\]:\[\e[${COLOR_GREEN}m\]"'\u'"\[\e[${COLOR_DEFAULT}m\]"
 	if shopt -q login_shell ; then
 	    PS1="${PS1}@\[\e[${COLOR_BLUE}m\]"'\h'"\[\e[${COLOR_DEFAULT}m\]"
 	fi
