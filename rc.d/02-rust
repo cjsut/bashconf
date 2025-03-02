@@ -6,7 +6,7 @@ if test -d $RUST_CARGO_DIR -a -f "$RUST_CARGO_DIR/env"; then
     . "$RUST_CARGO_DIR/env"
 fi
 
-if ! test -a "$BASHCONF_DIR/completion.d/rust"; then
+if ! test -a "$BASHCONF_DIR/completion.d/rust" -a -x "$(command -v rustup)"; then
     rustup completions bash > "$BASHCONF_CONFIG_DIR/completion.d/rust"
 fi
 

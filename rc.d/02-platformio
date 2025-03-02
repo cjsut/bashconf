@@ -1,0 +1,43 @@
+# PlatformIO paths
+
+local PLATFORMIO_DIR="$HOME/.platformio"
+local PLATFORMIO_BIN_DIR="$PLATFORMIO_DIR/bin"
+local PLATFORMIO_VENV_BIN_DIR_REL="penv/bin"
+local PLATFORMIO_VENV_BIN_DIR="$PLATFORMIO_DIR/$PLATFORMIO_VENV_BIN_DIR_REL"
+
+## Create symlinks to the PlatformIO virtualenv bin directory in
+# a separate bin directory.
+#
+# By default, PlatformIO creates a virtualenv and adds it to your path. This
+# affects other tools that use Python commands and tooling, as any Python
+# commands will be run in the PlatformIO virtualenv.
+#
+# As a workaround, this function will create a separate bin directory with a
+# limited set of symlinks to the PlatformIO virtualenv bin directory.
+platformio-ensure-reduced-bin() {
+    if test ! -d "$PLATFORMIO_BIN_DIR" -a -d "$PLATFORMIO_VENV_BIN_DIR"; then
+        if test -a "$PLATFORMIO_BIN_DIR"; then
+            bashconf-report-warning 'PlatformIO bin directory '"$PLATFORMIO_BIN_DIR"' already exists but is not a directory' \
+                'PlatformIO will not be available in your PATH. Please remove this file and source your bashrc again.'
+        fi
+
+        mkdir -p "$PLATFORMIO_BIN_DIR" &&
+            pushd "$PLATFORMIO_BIN_DIR" >/dev/null &&
+            ln -s "../$PLATFORMIO_VENV_BIN_DIR_REL/platformio" . &&
+            ln -s "../$PLATFORMIO_VENV_BIN_DIR_REL/pio" . &&
+            popd >/dev/null || {
+            bashconf-report-warning 'Failed to create symlinks in '"$PLATFORMIO_BIN_DIR"'' \
+                'PlatformIO will not be available in your PATH.'
+        }
+    fi
+}
+
+if test -d "$PLATFORMIO_DIR"; then
+    platformio-ensure-reduced-bin || return 1
+
+    if test -d "$PLATFORMIO_BIN_DIR"; then
+        bashconf-add-paths "$PLATFORMIO_BIN_DIR" || return 1
+    fi
+fi
+
+bashconf-cleanup platformio
